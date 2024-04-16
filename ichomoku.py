@@ -48,7 +48,8 @@ import matplotlib.pyplot as plt
 name_base = "BTC"
 name_quote = "USDT"
 timeframe = "1d"
-starting_date = "01 january 2020"
+starting_date = "1 january 2020"
+#end_date = "13 october 2023"
 initial_wallet = 1000
 trading_fees = 0.001
 
@@ -81,35 +82,35 @@ data['kijun_sen'] = (data['low'].rolling(window=26).min() + data['high'].rolling
 
 
 # Senkou Span A (Leading Span A): (Conversion Line + Base Line)/2))
-data['senkou_span_a'] = ((data['tenkan_sen'] + data['kijun_sen']) / 2).shift(26)
+data['senkou_span_a'] = ((data['tenkan_sen'] + data['kijun_sen']) / 2).shift(26).fillna(1000000000)
 
 # Senkou Span B (Leading Span B): (52-period high + 52-period low)/2))
 #df['period52_low'] = df['low'].rolling(window=52).min()
 #df['period52_high'] = df['high'].rolling(window=52).max()
-data['senkou_span_b'] = ((data['low'].rolling(window=52).min() + data['high'].rolling(window=52).max()) / 2).shift(26)
+data['senkou_span_b'] = ((data['low'].rolling(window=52).min() + data['high'].rolling(window=52).max()) / 2).shift(26).fillna(1000000000)
 
-# Chikou: The most current closing price plotted 26 time periods behind (market memeory)
-data['lagging_span'] = data['close'].shift(-26)
-
-data['lagging_span_out'] = False
-#data.loc[(),'lagging_span_out'] = True
+# Chikou: The most current closing price plotted 26 time periods behind (market memory)
+data['lagging_span'] = data['close'].shift(-26).fillna(0)
+data['lagging_span_now'] = data['lagging_span'].rolling(window=26).agg(lambda rows: rows.iloc[0])
+data['senkou_span_a_now'] = data['senkou_span_a'].rolling(window=26).agg(lambda rows: rows.iloc[0])
+data['senkou_span_b_now'] = data['senkou_span_b'].rolling(window=26).agg(lambda rows: rows.iloc[0])
+data['lagging_span_out_a'] = data['lagging_span'].rolling(window=26).agg(lambda rows: rows.iloc[0]) > data['senkou_span_a'].rolling(window=26).max()
+data['lagging_span_out_b'] = data['lagging_span'].rolling(window=26).agg(lambda rows: rows.iloc[0]) > data['senkou_span_b'].rolling(window=26).max()
 
 #data.dropna(inplace=True)
 
 # Strategy
 def buy_condition(row):
-    #return row['EMA-st'] > row['EMA-lt'] and row['RSI'] < 70
-    #if(row['tenkan_sen'].isnull() and row['kijun_sen'].isnull() and row['senkou_span_a'].isnull() and row['senkou_span_b'].isnull() ):
-        return row['close'] > row['tenkan_sen'] and row['close'] > row['kijun_sen'] and row['close'] > row['senkou_span_a'] and row['close'] > row['senkou_span_b']
-    #else:
-        #return False
-    
+    if(row['lagging_span_out_a'] and row['lagging_span_out_b'] and (row['senkou_span_b'] > row['senkou_span_a'])):
+    #if(row['lagging_span_out_a'] and row['lagging_span_out_b']):
+        return row['close'] > row['senkou_span_a'] and row['close'] > row['senkou_span_b']
+        #return row['close'] > row['tenkan_sen'] and row['close'] > row['kijun_sen'] and row['close'] > row['senkou_span_a'] and row['close'] > row['senkou_span_b']
+    else:
+        False
+
 def sell_condition(row):
-    #return row['EMA-st'] < row['EMA-lt'] and row['RSI'] > 30
-    #if(row['tenkan_sen'].isnull() and row['kijun_sen'].isnull()):
-        return row['close'] < row['tenkan_sen'] #and row['close'] < row['kijun_sen']
-    #else:
-        #return False
+    return row['close'] < row['senkou_span_a'] and row['close'] < row['senkou_span_b']
+    #return row['close'] < row['tenkan_sen'] #and row['close'] < row['kijun_sen']
 
 
 # backtest loop
@@ -250,5 +251,8 @@ total_fee = round(orders['fee'].sum(),2)
 print(f" > Total: {total_fee} {name_quote}")
 
 
-print(data)
-data.to_csv('out.csv')
+#print(data)
+#data.to_csv('out.csv')
+
+#print(orders)
+#orders.to_csv('orders.csv')
