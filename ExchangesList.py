@@ -1,3 +1,8 @@
+#pip install python-binance
+#pip install ccxt
+#pip install matplotlib
+#pip install ta
+
 # import sys
 # lib_path = ["Account", "Auth", "Utils"]
 
@@ -20,6 +25,7 @@ from Exchange import Utils
 
 authentication = Creds.Creds().get_creds()
 exchange = ccxt.binance(authentication)
+exchange.setSandboxMode(True)
 
 balance = Balance.Balance(exchange)
 print(balance.get_balance("USDT")["total"])
