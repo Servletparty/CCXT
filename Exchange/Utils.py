@@ -1,5 +1,8 @@
 def get_pair_current_price(exchange, pair):
-    return (exchange.fetch_ticker(pair)["ask"] + exchange.fetch_ticker(pair)["bid"]) / 2
+    if exchange.fetch_ticker(pair)["ask"] == None or exchange.fetch_ticker(pair)["bid"] == None:
+        return exchange.fetch_ticker(pair)["last"]
+    else:
+        return (exchange.fetch_ticker(pair)["ask"] + exchange.fetch_ticker(pair)["bid"]) / 2
 
 # class Utils:
 #     def __init__(self, ex):

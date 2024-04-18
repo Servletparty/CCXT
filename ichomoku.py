@@ -1,3 +1,4 @@
+import sys
 import pandas as pd
 
 pd.set_option('display.max_rows', 1000)
@@ -47,8 +48,8 @@ import matplotlib.pyplot as plt
 
 name_base = "BTC"
 name_quote = "USDT"
-timeframe = "1d"
-starting_date = "1 january 2020"
+timeframe = "1h"
+starting_date = "1 january 2017"
 #end_date = "13 october 2023"
 initial_wallet = 1000
 trading_fees = 0.001
@@ -99,6 +100,8 @@ data['lagging_span_out_b'] = data['lagging_span'].rolling(window=26).agg(lambda 
 
 #data.dropna(inplace=True)
 
+print(data)
+
 # Strategy
 def buy_condition(row):
     if(row['lagging_span_out_a'] and row['lagging_span_out_b'] and (row['senkou_span_b'] > row['senkou_span_a'])):
@@ -111,7 +114,6 @@ def buy_condition(row):
 def sell_condition(row):
     return row['close'] < row['senkou_span_a'] and row['close'] < row['senkou_span_b']
     #return row['close'] < row['tenkan_sen'] #and row['close'] < row['kijun_sen']
-
 
 # backtest loop
 quote = initial_wallet
